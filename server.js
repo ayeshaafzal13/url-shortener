@@ -14,7 +14,7 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // ---------------------------------------------------------
 // EVENT LOOP DEMO
-// ---------------------------------------------------------
+// --------------------------------------------------
 console.log('1. Server script starts executing (sync)');
 
 fs.readFile(path.join(PUBLIC_DIR, 'index.html'), 'utf-8', () => {
@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // =============================================
+  // ==========================================
   // ROUTE 2: POST /shorten -> create a new short URL
   // =============================================
   if (method === 'POST' && url === '/shorten') {
