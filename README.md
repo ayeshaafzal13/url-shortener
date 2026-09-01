@@ -1,25 +1,25 @@
-## 🧠 Node.js Event Loop
+## 🔗 URL Shortener - Node.js
 
-The Node.js event loop is what makes Node.js non-blocking and asynchronous. It handles all async operations like file I/O, network requests, and timers.
+A basic URL shortener built with **Node.js** using only built-in modules (http, fs, path).
 
-### How It Works:
+## 📋 Requirements Met
 
-1. **JavaScript code runs** - executes synchronously
-2. **Async operations are delegated** - to the system kernel
-3. **Callbacks are queued** - when operations complete
-4. **Event loop checks the queue** - when the call stack is empty
+- ✅ HTTP server using `http` module
+- ✅ File system operations using `fs` module (read/write URLs)
+- ✅ Event loop explanation included
+- ✅ npm scripts configured in `package.json`
 
-### Phases of Event Loop:
+## 🚀 How to Run
 
-| Phase | What it does |
-|-------|--------------|
-| Timers | Executes setTimeout/setInterval callbacks |
-| Pending Callbacks | Executes I/O callbacks |
-| Poll | Retrieves new I/O events |
-| Check | Executes setImmediate callbacks |
-| Close Callbacks | Closes connections |
+```bash
+# Clone the repository
+git clone https://github.com/ayeshaafzal13/url-shortener.git
 
-### Why it matters:
-- JavaScript is single-threaded
-- Event loop handles concurrency without multi-threading
-- Non-blocking I/O makes Node.js fast and efficient
+# Navigate to the project
+cd url-shortener
+
+# Start the server
+npm start
+
+# Development mode (auto-restart on changes)
+npm run dev
