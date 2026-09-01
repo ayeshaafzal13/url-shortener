@@ -93,9 +93,10 @@ const server = http.createServer((req, res) => {
         writeData(data);
 
         // ✅ FIX: Correct URL for render
-        
-        const baseUrl = `https://${req.headers.host}`;
 
+        const baseUrl = req.headers.host?.includes('localhost')
+  ? `http://${req.headers.host}`
+  : `https://${req.headers.host}`;
         console.log('✅ Short URL created:', shortCode); // Debug log
 
         sendJSON(res, 201, {
