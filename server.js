@@ -9,7 +9,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { readData, writeData } = require('./utils/fileStore');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // ---------------------------------------------------------
@@ -47,7 +47,9 @@ function sendJSON(res, statusCode, data) {
 const server = http.createServer((req, res) => {
   const { method, url } = req;
 
-  // ----- ROUTE 1: GET / -> serve the HTML form -----
+  // =============================================
+  // ROUTE 1: GET / -> serve the HTML form
+  // =============================================
   if (method === 'GET' && url === '/') {
     fs.readFile(path.join(PUBLIC_DIR, 'index.html'), 'utf-8', (err, content) => {
       if (err) {
@@ -60,70 +62,92 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // ----- ROUTE 2: POST /shorten -> create a new short URL -----
+  // =============================================
+  // ROUTE 2: POST /shorten -> create a new short URL
+  // =============================================
   if (method === 'POST' && url === '/shorten') {
     let body = '';
 
-    // req is a STREAM. Data arrives in chunks, not all at once.
-    // We listen for 'data' events and concatenate the chunks.
     req.on('data', (chunk) => {
       body += chunk.toString();
     });
 
-    // 'end' event fires once all chunks have arrived.
     req.on('end', () => {
+      // ✅ FIX: Check if body is empty
+      if (!body || body.trim() === '') {
+        return sendJSON(res, 400, { error: 'Request body is empty' });
+      }
+
       try {
-        let { url: longUrl } = JSON.parse(body);
+        const parsed = JSON.parse(body);
+        let longUrl = parsed.url;
+
         if (!longUrl || !longUrl.trim()) {
           return sendJSON(res, 400, { error: 'URL is required' });
         }
+
         longUrl = longUrl.trim();
 
-        // A redirect Location header needs a full URL (with protocol).
-        // Without this, "www.example.com" is treated as a RELATIVE path
-        // by the browser, not an external address — which breaks the redirect.
+        // Add https:// if missing
         if (!/^https?:\/\//i.test(longUrl)) {
           longUrl = 'https://' + longUrl;
         }
 
-        const data = readData();          // fs READ
+        const data = readData();
         const shortCode = generateShortCode();
         data[shortCode] = longUrl;
-        writeData(data);                  // fs WRITE
+        writeData(data);
+
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}`
+          : `http://localhost:${PORT}`;
 
         sendJSON(res, 201, {
           shortCode,
-          shortUrl: `http://localhost:${PORT}/${shortCode}`,
+          shortUrl: `${baseUrl}/${shortCode}`,
         });
       } catch (err) {
-        sendJSON(res, 400, { error: 'Invalid JSON body' });
+        // ✅ FIX: Better error message
+        sendJSON(res, 400, { error: 'Invalid JSON format. Please send valid JSON.' });
       }
     });
     return;
   }
 
-  // ----- ROUTE 3: GET /urls -> view all saved mappings -----
+  // =============================================
+  // ROUTE 3: GET /urls -> view all saved mappings
+  // =============================================
   if (method === 'GET' && url === '/urls') {
     const data = readData();
     return sendJSON(res, 200, data);
   }
 
-  // ----- ROUTE 4: GET /:code -> redirect to the original long URL -----
-  if (method === 'GET' && url.length > 1) {
-    const shortCode = url.slice(1); // remove leading "/"
+  // =============================================
+  // ROUTE 4: GET /:code -> redirect to the original long URL
+  // =============================================
+  if (method === 'GET' && url && url.length > 1 && url !== '/favicon.ico') {
+    const shortCode = url.slice(1);
     const data = readData();
 
     if (data[shortCode]) {
-      res.writeHead(302, { Location: data[shortCode] }); // 302 = temporary redirect
+      res.writeHead(302, { Location: data[shortCode] });
       return res.end();
     }
     return sendJSON(res, 404, { error: 'Short URL not found' });
   }
 
-  // ----- FALLBACK: nothing matched -----
+  // =============================================
+  // FALLBACK: nothing matched
+  // =============================================
   sendJSON(res, 404, { error: 'Route not found' });
 });
 
+// Start the server
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`📁 Routes:`);
+  console.log(`   GET  /           - Home page`);
+  console.log(`   POST /shorten    - Create short URL`);
+  console.log(`   GET  /urls       - View all URLs`);
+  console.log(`   GET  /:code      - Redirect to original URL`);
 });
