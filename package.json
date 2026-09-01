@@ -1,0 +1,13 @@
+{
+  "name": "node-url-shortener",
+  "version": "1.0.0",
+  "description": "A URL shortener built with only Node.js core modules (http, fs, url, crypto) — no Express, no database.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["nodejs", "http", "fs", "event-loop"],
+  "author": "",
+  "license": "ISC"
+}

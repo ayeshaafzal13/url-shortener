@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Node.js URL Shortener</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 60px auto; padding: 0 20px; }
+    input, button { padding: 10px; font-size: 15px; }
+    input { width: 70%; }
+    button { cursor: pointer; }
+    #result { margin-top: 20px; padding: 10px; background: #f2f2f2; word-break: break-all; }
+    a { color: #0077cc; }
+  </style>
+</head>
+<body>
+  <h2>URL Shortener (Node.js core modules only)</h2>
+  <p>Built with <code>http</code>, <code>fs</code>, and <code>url</code> — no Express, no database.</p>
+
+  <input type="text" id="longUrl" placeholder="Paste a long URL here..." />
+  <button onclick="shorten()">Shorten</button>
+
+  <div id="result"></div>
+
+  <p><a href="/urls">View all saved URLs (JSON)</a></p>
+
+  <script>
+    async function shorten() {
+      const longUrl = document.getElementById('longUrl').value.trim();
+      const resultBox = document.getElementById('result');
+
+      if (!longUrl) {
+        resultBox.innerHTML = 'Please paste a URL first.';
+        return;
+      }
+
+      const res = await fetch('/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: longUrl })
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        resultBox.innerHTML = `Error: ${data.error || 'Something went wrong'}`;
+        return;
+      }
+
+      resultBox.innerHTML =
+        `Short link: <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>`;
+    }
+  </script>
+</body>
+</html>
