@@ -33,20 +33,14 @@ module.exports = (req, res) => {
         longUrl = 'https://' + longUrl;
       }
 
-      const data = readData();
+     const shortCode = generateShortCode();
 
-      const shortCode = generateShortCode();
+const baseUrl = `https://${req.headers.host}`;
 
-      data[shortCode] = longUrl;
-
-      writeData(data);
-
-      const baseUrl = `https://${req.headers.host}`;
-
-      return sendJSON(res, 201, {
-        shortCode,
-        shortUrl: `${baseUrl}/${shortCode}`
-      });
+return sendJSON(res, 201, {
+  shortCode,
+  shortUrl: `${baseUrl}/${shortCode}`
+});
 
     } catch (error) {
       console.error(error);
