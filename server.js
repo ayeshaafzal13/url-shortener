@@ -92,10 +92,9 @@ const server = http.createServer((req, res) => {
         data[shortCode] = longUrl;
         writeData(data);
 
-        // ✅ FIX: Correct URL for Vercel
-        const baseUrl = process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : `http://localhost:${PORT}`;
+        // ✅ FIX: Correct URL for render
+        
+        const baseUrl = `https://${req.headers.host}`;
 
         console.log('✅ Short URL created:', shortCode); // Debug log
 
