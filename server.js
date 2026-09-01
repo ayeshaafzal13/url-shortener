@@ -14,8 +14,6 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // ---------------------------------------------------------
 // EVENT LOOP DEMO
-// These three logs prove that Node does NOT run top-to-bottom
-// like a simple script when async operations are involved.
 // ---------------------------------------------------------
 console.log('1. Server script starts executing (sync)');
 
@@ -24,26 +22,17 @@ fs.readFile(path.join(PUBLIC_DIR, 'index.html'), 'utf-8', () => {
 });
 
 console.log('2. Server script keeps running (sync) — this logs BEFORE line 3');
-// Expected console order when you run `npm start`: 1, 2, then 3.
-// Why: fs.readFile is handed off to Node's thread pool. The main thread
-// does NOT wait for it — it moves on to the next line immediately.
-// Once the file read finishes, the callback is queued and the EVENT LOOP
-// picks it up only after the current synchronous code has finished.
 // ---------------------------------------------------------
 
-// Helper: generates a short random code, e.g. "a1b2c3"
 function generateShortCode() {
   return crypto.randomBytes(4).toString('hex').slice(0, 6);
 }
 
-// Helper: sends a JSON response with less boilerplate
 function sendJSON(res, statusCode, data) {
   res.writeHead(statusCode, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
 }
 
-// The actual server. createServer takes a callback that runs
-// EVERY TIME a request comes in. req = incoming request, res = what we send back.
 const server = http.createServer((req, res) => {
   const { method, url } = req;
 
@@ -73,13 +62,18 @@ const server = http.createServer((req, res) => {
     });
 
     req.on('end', () => {
+      console.log('📥 Raw body received:', body); // Debug log
+
       // ✅ FIX: Check if body is empty
       if (!body || body.trim() === '') {
+        console.log('❌ Empty body');
         return sendJSON(res, 400, { error: 'Request body is empty' });
       }
 
       try {
         const parsed = JSON.parse(body);
+        console.log('✅ Parsed JSON:', parsed); // Debug log
+
         let longUrl = parsed.url;
 
         if (!longUrl || !longUrl.trim()) {
@@ -98,16 +92,19 @@ const server = http.createServer((req, res) => {
         data[shortCode] = longUrl;
         writeData(data);
 
-        const baseUrl = process.env.VERCEL_URL 
+        // ✅ FIX: Correct URL for Vercel
+        const baseUrl = process.env.VERCEL_URL
           ? `https://${process.env.VERCEL_URL}`
           : `http://localhost:${PORT}`;
+
+        console.log('✅ Short URL created:', shortCode); // Debug log
 
         sendJSON(res, 201, {
           shortCode,
           shortUrl: `${baseUrl}/${shortCode}`,
         });
       } catch (err) {
-        // ✅ FIX: Better error message
+        console.log('❌ JSON Parse Error:', err.message); // Debug log
         sendJSON(res, 400, { error: 'Invalid JSON format. Please send valid JSON.' });
       }
     });
@@ -142,7 +139,6 @@ const server = http.createServer((req, res) => {
   sendJSON(res, 404, { error: 'Route not found' });
 });
 
-// Start the server
 server.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
   console.log(`📁 Routes:`);
